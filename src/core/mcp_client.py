@@ -3,8 +3,8 @@ import re
 
 from huggingface_hub.inference._mcp.agent import Agent
 
-from ..config import settings
-from ..constants import RECOGNIZED_TAGS
+from config import settings
+from constants import RECOGNIZED_TAGS
 
 
 tagging_agent: Optional[Agent] = None
@@ -15,6 +15,9 @@ async def get_agent() -> Optional[Agent]:
     global tagging_agent
     if tagging_agent is None and settings.HF_TOKEN:
         # note: if a token isn't provided the agent will not be created
+        if not settings.HF_MODEL:
+            print("❌ HF_MODEL is not configured; cannot create agent")
+            return None
         try:
             tagging_agent = Agent(
                 model=settings.HF_MODEL,

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     HF_TOKEN: str = Field(..., description= "Hugging face token")
     WEBHOOK_SECRET: str= Field(..., description="Webhook Secret (required for production)")
     HF_MODEL: str= Field(..., description="Model for the agent")
-    HF_PROVIDER : str = Optional(..., description= "")
+    HF_PROVIDER : Optional[str] = Field(None, description= "")
 
 
     model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(

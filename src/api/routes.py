@@ -1,6 +1,6 @@
-from ..config import settings
+from config import settings
 from fastapi import BackgroundTasks, Request, APIRouter
-from ..core.mcp_client import process_webhook_comment, get_agent
+from core.mcp_client import process_webhook_comment, get_agent
 import datetime
 from ..constants import tag_operations_store
 import json
