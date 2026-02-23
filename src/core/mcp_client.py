@@ -3,8 +3,8 @@ import re
 
 from huggingface_hub.inference._mcp.agent import Agent
 
-from config import settings
-from constants import RECOGNIZED_TAGS
+from ..config import settings
+from ..constants import RECOGNIZED_TAGS
 
 
 tagging_agent: Optional[Agent] = None

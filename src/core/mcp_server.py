@@ -5,8 +5,8 @@ from fastmcp import FastMCP
 from huggingface_hub import HfApi, model_info, ModelCard, ModelCardData
 from huggingface_hub.utils import HfHubHTTPError
 
-from config import settings
-from api.server import mcp, hf_api
+from ..config import settings
+from ..api.server import mcp, hf_api
 
 
 @mcp.tool()
