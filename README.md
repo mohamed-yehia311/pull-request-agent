@@ -1,4 +1,6 @@
 # Hugging Face Hub Tagging Bot
+*Note: This project is based on the [Hugging Face MCP Course - Unit 3: Webhooks & Agents](https://huggingface.co/learn/mcp-course/unit3_1/introduction).*
+
 This project is an automated tagging agent for Hugging Face model repositories. It serves as a webhook listener built with FastAPI that automatically monitors model discussions. When a user asks a question or leaves a comment suggesting a machine learning tag (e.g., `#nlp`, `#vision`), this bot automatically extracts the tags, verifies them using an intelligent MCP agent, and creates a Pull Request on the Hugging Face Hub to add those tags to the model's `README.md` metadata!
 
 ## 🚀 Features
