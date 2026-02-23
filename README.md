@@ -15,8 +15,6 @@ You can install the required packages using `pip` or `uv`. This project requires
 
 Using `pip`:
 ```bash
-pip install -r requirements.txt
-# Alternatively, install directly from pyproject.toml:
 pip install .
 ```
 
