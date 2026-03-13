@@ -162,3 +162,8 @@ def add_new_tag(repo_id: str, new_tag: str) -> str:
         json_str = json.dumps(error_result)
         print(f"❌ add_new_tag error returning: {json_str}")
         return json_str
+
+
+if __name__ == "__main__":
+    print("🚀 Starting MCP server over stdio...")
+    mcp.run("stdio")
