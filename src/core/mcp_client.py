@@ -5,40 +5,44 @@ from huggingface_hub.inference._mcp.agent import Agent
 
 from ..config import settings
 from ..constants import RECOGNIZED_TAGS
-
+from pathlib import Path
+import sys
 
 tagging_agent: Optional[Agent] = None
 
 
 async def get_agent() -> Optional[Agent]:
-    """Return a singleton MCP agent instance, creating it on first call."""
-    global tagging_agent
-    if tagging_agent is None and settings.HF_TOKEN:
-        # note: if a token isn't provided the agent will not be created
+    """Create and return a new MCP agent instance."""
+    if settings.HF_TOKEN:
         if not settings.HF_MODEL:
             print("❌ HF_MODEL is not configured; cannot create agent")
             return None
         try:
-            tagging_agent = Agent(
+            # Get the absolute path to the project root
+            project_root = str(Path(__file__).parent.parent.parent.absolute())
+            
+            agent = Agent(
                 model=settings.HF_MODEL,
                 provider=settings.HF_PROVIDER,
                 api_key=settings.HF_TOKEN,
                 servers=[
                     {
                         "type": "stdio",
-                        "command": "python",
-                        "args": ["mcp_server.py"],
-                        "cwd": ".",
-                        "env": {"HF_TOKEN": settings.HF_TOKEN},
+                        "command": sys.executable,
+                        "args": ["run_mcp.py"],
+                        "cwd": project_root,
+                        "env": {"HF_TOKEN": settings.HF_TOKEN, "PYTHONPATH": project_root},
                     }
                 ],
             )
-            await tagging_agent.load_tools()
+            return agent
         except Exception as exc:
             print(f"❌ failed to create agent: {exc}")
-            tagging_agent = None
-    return tagging_agent
+    return None
 
+
+from ..api.store import tag_operations_store
+import datetime
 
 async def process_webhook_comment(webhook_data: Dict[str, Any]) -> List[str]:
     """Evaluate a discussion comment and return a list of status messages.
@@ -65,26 +69,52 @@ async def process_webhook_comment(webhook_data: Dict[str, Any]) -> List[str]:
     if not agent:
         return ["Error: Agent not configured (missing HF_TOKEN)"]
 
+    # ... agent generation ...
     results: List[str] = []
-    for tag in all_tags:
-        prompt = f"""
-        For the repository '{repo_name}', check if the tag '{tag}' already exists.
-        If it doesn't exist, add it via a pull request.
+    
+    async with agent:
+        # Load tools when agent context is ready
+        await agent.load_tools()
 
-        Repository: {repo_name}
-        Tag to check/add: {tag}
-        """
-        try:
-            print(f"🤖 asking agent about {tag} in {repo_name}")
-            response = await agent.run(prompt)
-            if "success" in response.lower():
-                results.append(f"✅ Tag '{tag}' processed successfully")
-            else:
-                results.append(f"⚠️ Issue with tag '{tag}': {response}")
-        except Exception as exc:
-            error_msg = f"❌ error processing '{tag}': {exc}"
-            print(error_msg)
-            results.append(error_msg)
+        for tag in all_tags:
+            prompt = f"""
+            For the repository '{repo_name}', check if the tag '{tag}' already exists.
+            If it doesn't exist, add it via a pull request.
+    
+            Repository: {repo_name}
+            Tag to check/add: {tag}
+            """
+            
+            operation_log = {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "repo": repo_name,
+                "tag": tag,
+                "status": "pending",
+                "message": ""
+            }
+            
+            try:
+                print(f"🤖 asking agent about {tag} in {repo_name}")
+                response = await agent.run(prompt)
+                if "success" in response.lower():
+                    msg = f"✅ Tag '{tag}' processed successfully"
+                    results.append(msg)
+                    operation_log["status"] = "success"
+                    operation_log["message"] = msg
+                else:
+                    msg = f"⚠️ Issue with tag '{tag}': {response}"
+                    results.append(msg)
+                    operation_log["status"] = "issue"
+                    operation_log["message"] = msg
+            except Exception as exc:
+                error_msg = f"❌ error processing '{tag}': {exc}"
+                print(error_msg)
+                results.append(error_msg)
+                operation_log["status"] = "error"
+                operation_log["message"] = error_msg
+                
+            # append log history to store
+            tag_operations_store.append(operation_log)
 
     return results
 
