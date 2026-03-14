@@ -95,14 +95,29 @@ async def process_webhook_comment(webhook_data: Dict[str, Any]) -> List[str]:
             
             try:
                 print(f"🤖 asking agent about {tag} in {repo_name}")
-                response = await agent.run(prompt)
-                if "success" in response.lower():
+                
+                response_text = ""
+                async for chunk in agent.run(prompt):
+                    if hasattr(chunk, "choices") and chunk.choices:
+                        delta = chunk.choices[0].delta
+                        if hasattr(delta, "content") and delta.content:
+                            response_text += delta.content
+                    elif hasattr(chunk, "content") and chunk.content:
+                        response_text += chunk.content
+                    elif isinstance(chunk, dict) and "choices" in chunk:
+                        content = chunk["choices"][0].get("delta", {}).get("content")
+                        if content:
+                            response_text += content
+
+                print(f"🤖 agent response: {response_text}")
+
+                if "success" in response_text.lower():
                     msg = f"✅ Tag '{tag}' processed successfully"
                     results.append(msg)
                     operation_log["status"] = "success"
                     operation_log["message"] = msg
                 else:
-                    msg = f"⚠️ Issue with tag '{tag}': {response}"
+                    msg = f"⚠️ Issue with tag '{tag}': {response_text}"
                     results.append(msg)
                     operation_log["status"] = "issue"
                     operation_log["message"] = msg
