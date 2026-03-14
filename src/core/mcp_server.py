@@ -1,5 +1,13 @@
 import json
 from typing import Optional
+import sys
+import builtins
+
+# Redirect all print statements to stderr since stdout is used by MCP for JSON-RPC communication
+def _print_to_stderr(*args, **kwargs):
+    kwargs.setdefault("file", sys.stderr)
+    builtins.print(*args, **kwargs)
+print = _print_to_stderr
 
 from fastmcp import FastMCP
 from huggingface_hub import HfApi, model_info, ModelCard, ModelCardData
