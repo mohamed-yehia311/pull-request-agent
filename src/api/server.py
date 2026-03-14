@@ -9,7 +9,7 @@ from .routes import router
 # initialize shared resources before creating the FastAPI app
 # tag_operations_store is defined in store.py to avoid circular imports
 hf_api = HfApi(token=settings.HF_TOKEN)
-
+mcp = FastMCP("hf-tagger")
 
 app = FastAPI(title="HF Tagging Bot")
 app.include_router(router)
