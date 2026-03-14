@@ -38,24 +38,25 @@ WEBHOOK_SECRET=your_custom_secret_string
 
 ---
 
-## 🏃 Running the Application
+## Running the Application
 
-To run the FastAPI server, use `uvicorn`:
+To run the project locally, you will need to start three separate processes in their own terminal windows.
 
+### 1. Start the MCP Server
+First, start the Model Context Protocol (MCP) server:
+```bash
+python run_mcp.py
+```
+
+### 2. Start the FastAPI Webhook Server
+Next, start the FastAPI server to listen for webhook events:
 ```bash
 uvicorn src.api.server:app --reload --port 8000
 ```
-
 The application will now be running locally at `http://127.0.0.1:8000`.
 
----
-
-## 🌐 Setting up Webhooks & Ngrok
-
-Hugging Face webhooks require a public, internet-accessible URL. Since your application is running locally on `localhost:8000`, you will need to expose it using **Ngrok**.
-
-### 1. Start Ngrok
-In a new terminal, run:
+### 3. Expose the Server with Ngrok
+Hugging Face webhooks require a public, internet-accessible URL. Expose your local port 8000 to the internet using **ngrok**:
 ```bash
 ngrok http 8000
 ```
